@@ -1,0 +1,6 @@
+C:\Development\Database.Initialization\src\Database.Initialization\bin\Debug\netstandard2.1\Database.Initialization.deps.json
+C:\Development\Database.Initialization\src\Database.Initialization\bin\Debug\netstandard2.1\Database.Initialization.dll
+C:\Development\Database.Initialization\src\Database.Initialization\obj\Debug\netstandard2.1\Database.Initialization.csprojAssemblyReference.cache
+C:\Development\Database.Initialization\src\Database.Initialization\obj\Debug\netstandard2.1\Database.Initialization.csproj.CoreCompileInputs.cache
+C:\Development\Database.Initialization\src\Database.Initialization\obj\Debug\netstandard2.1\Database.Initialization.AssemblyInfoInputs.cache
+C:\Development\Database.Initialization\src\Database.Initialization\obj\Debug\netstandard2.1\Database.Initialization.AssemblyInfo.cs

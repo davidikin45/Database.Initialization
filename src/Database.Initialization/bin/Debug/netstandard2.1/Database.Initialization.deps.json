@@ -1,0 +1,120 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.1/",
+    "signature": "2e50911112b68018f0e69633fd365ad55d379e7a"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.1": {},
+    ".NETStandard,Version=v2.1/": {
+      "Database.Initialization/1.0.0": {
+        "dependencies": {
+          "Microsoft.Data.Sqlite": "2.2.3",
+          "NETStandard.Library": "2.1.0-prerelease.19126.1"
+        },
+        "runtime": {
+          "Database.Initialization.dll": {}
+        }
+      },
+      "Microsoft.Data.Sqlite/2.2.3": {
+        "dependencies": {
+          "Microsoft.Data.Sqlite.Core": "2.2.3",
+          "SQLitePCLRaw.bundle_green": "1.1.12"
+        }
+      },
+      "Microsoft.Data.Sqlite.Core/2.2.3": {
+        "dependencies": {
+          "SQLitePCLRaw.core": "1.1.12"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Data.Sqlite.dll": {
+            "assemblyVersion": "2.2.3.0",
+            "fileVersion": "2.2.3.19047"
+          }
+        }
+      },
+      "Microsoft.NETCore.Platforms/1.1.0": {},
+      "NETStandard.Library/2.1.0-prerelease.19126.1": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.1.0"
+        }
+      },
+      "SQLitePCLRaw.bundle_green/1.1.12": {
+        "dependencies": {
+          "NETStandard.Library": "2.1.0-prerelease.19126.1",
+          "SQLitePCLRaw.core": "1.1.12"
+        },
+        "runtime": {
+          "lib/netstandard1.1/SQLitePCLRaw.batteries_green.dll": {
+            "assemblyVersion": "1.1.12.351",
+            "fileVersion": "1.0.0.0"
+          },
+          "lib/netstandard1.1/SQLitePCLRaw.batteries_v2.dll": {
+            "assemblyVersion": "1.1.12.351",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SQLitePCLRaw.core/1.1.12": {
+        "dependencies": {
+          "NETStandard.Library": "2.1.0-prerelease.19126.1"
+        },
+        "runtime": {
+          "lib/netstandard1.1/SQLitePCLRaw.core.dll": {
+            "assemblyVersion": "1.1.12.351",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Database.Initialization/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Data.Sqlite/2.2.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qx0gY40Am6OyEkX2Fem6cR8QP7faGGmPq6fZ8zrLWOgIO/GCIPqevTO4J5befU8slW3uVHrxdI8FDj7yMNx7eg==",
+      "path": "microsoft.data.sqlite/2.2.3",
+      "hashPath": "microsoft.data.sqlite.2.2.3.nupkg.sha512"
+    },
+    "Microsoft.Data.Sqlite.Core/2.2.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WVhNky8hr/k6+PfwOz5yJzNe4CPCkyOnYI4nAwfY2qm54/thGGXLwgga+i07lvLryThCOJ4JaQfJg1iZLzlP5Q==",
+      "path": "microsoft.data.sqlite.core/2.2.3",
+      "hashPath": "microsoft.data.sqlite.core.2.2.3.nupkg.sha512"
+    },
+    "Microsoft.NETCore.Platforms/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
+      "path": "microsoft.netcore.platforms/1.1.0",
+      "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
+    },
+    "NETStandard.Library/2.1.0-prerelease.19126.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-K58GolyqP/NOy+2UKYMff20ZScYPwqPufApBkXUlH9ClUmusDG4TgUmbnC8qCntVL62UMSS3kbYKVMz7MvL6GQ==",
+      "path": "netstandard.library/2.1.0-prerelease.19126.1",
+      "hashPath": "netstandard.library.2.1.0-prerelease.19126.1.nupkg.sha512"
+    },
+    "SQLitePCLRaw.bundle_green/1.1.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-U5lZv+E0JBCG5uQngaRgyIAlbzIwRczb0m46XJfLGXovtfVOaMNRY/oGyKAJjdexVrfqLRd+JyopGMySpAZRGQ==",
+      "path": "sqlitepclraw.bundle_green/1.1.12",
+      "hashPath": "sqlitepclraw.bundle_green.1.1.12.nupkg.sha512"
+    },
+    "SQLitePCLRaw.core/1.1.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-S4hr+tE275ran5jyKFW/FYPG6Bz6nsHUp9H8chqKxzk21PxJadLd9LnvLe6LMRP/IqY5+LOIIDQF3m/2iDlZ7Q==",
+      "path": "sqlitepclraw.core/1.1.12",
+      "hashPath": "sqlitepclraw.core.1.1.12.nupkg.sha512"
+    }
+  }
+}
