@@ -30,7 +30,7 @@ namespace Database.Initialization
             {
                 throw new Exception("Connection String empty");
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
@@ -61,7 +61,7 @@ namespace Database.Initialization
             {
                 return 0;
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
@@ -85,7 +85,7 @@ namespace Database.Initialization
             {
                 return false;
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
@@ -117,7 +117,7 @@ namespace Database.Initialization
             {
                 return new List<string>();
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
@@ -143,7 +143,7 @@ namespace Database.Initialization
             {
                 return false;
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 bool exists = await DbInitializer.ExistsAsync(connectionString, cancellationToken);
 
@@ -200,7 +200,7 @@ namespace Database.Initialization
             {
 
             }
-            else if (IsSQLite(connectionString))
+            else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
 
@@ -270,15 +270,6 @@ namespace Database.Initialization
                 }
             }
         }
-
-        #region IsSQLite
-        private static bool IsSQLite(string connectionString)
-        {
-            return connectionString.ToLower().Contains(".sqlite")
-                || connectionString.ToLower().Contains(".db")
-                || connectionString.ToLower().Contains(":memory:");
-        }
-        #endregion
 
         #region SQLite Helper Methods
         private static async Task<TType> ExecuteSqliteScalarAsync<TType>(
