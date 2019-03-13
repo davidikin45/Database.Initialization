@@ -21,7 +21,7 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "netstandard2.1"
+          "netstandard2.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
@@ -34,7 +34,7 @@
           "https://dotnetfeed.blob.core.windows.net/dotnet-windowsdesktop/index.json": {}
         },
         "frameworks": {
-          "netstandard2.1": {
+          "netstandard2.0": {
             "projectReferences": {}
           }
         },
@@ -45,17 +45,16 @@
         }
       },
       "frameworks": {
-        "netstandard2.1": {
+        "netstandard2.0": {
           "dependencies": {
             "Microsoft.Data.Sqlite": {
               "target": "Package",
               "version": "[2.2.3, )"
             },
             "NETStandard.Library": {
-              "include": "None",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[2.1.0-prerelease.19126.1, )",
+              "version": "[2.0.3, )",
               "autoReferenced": true
             },
             "System.Data.SqlClient": {
