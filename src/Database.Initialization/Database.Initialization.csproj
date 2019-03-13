@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>David Ikin</Authors>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>DND Worldwide</Company>
   </PropertyGroup>
 
   <ItemGroup>
