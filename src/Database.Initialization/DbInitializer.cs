@@ -15,7 +15,7 @@ namespace Database.Initialization
         {
             try
             {
-                await TestConnectionAsync(connectionString, cancellationToken);
+                await TestConnectionAsync(connectionString, cancellationToken).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -37,14 +37,14 @@ namespace Database.Initialization
 
                 using (var conn = new SqliteConnection(builder.ConnectionString))
                 {
-                    await conn.OpenAsync(cancellationToken);
+                    await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
             else
             {
                 using (var conn = new SqlConnection(connectionString))
                 {
-                    await conn.OpenAsync(cancellationToken);
+                    await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -66,14 +66,14 @@ namespace Database.Initialization
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
                 var count = await ExecuteSqliteScalarAsync<long>(builder.ConnectionString,
-                    "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';", cancellationToken);
+                    "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';", cancellationToken).ConfigureAwait(false);
 
                 return count;
             }
             else
             {
                 var count = await ExecuteSqlScalarAsync<int>(connectionString,
-                       "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken);
+                       "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken).ConfigureAwait(false);
 
                 return count;
             }
@@ -94,7 +94,7 @@ namespace Database.Initialization
                             SELECT * FROM ""sqlite_master"" WHERE ""type"" = 'table' AND ""rootpage"" IS NOT NULL AND ""tbl_name"" = '{tableName}'
                         )
                         THEN CAST(1 AS BIT)
-                        ELSE CAST(0 AS BIT) END;", cancellationToken);
+                        ELSE CAST(0 AS BIT) END;", cancellationToken).ConfigureAwait(false);
 
                 return exists == 1;
             }
@@ -105,7 +105,7 @@ namespace Database.Initialization
                             SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{tableName}'
                         )
                         THEN CAST(1 AS BIT)
-                        ELSE CAST(0 AS BIT) END;", cancellationToken);
+                        ELSE CAST(0 AS BIT) END;", cancellationToken).ConfigureAwait(false);
 
                 return exists;
             }
@@ -123,7 +123,7 @@ namespace Database.Initialization
                 builder.Mode = SqliteOpenMode.ReadOnly;
                 var tableNames = await ExecuteSqliteQueryAsync<string>(builder.ConnectionString,
                     "SELECT * FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';",
-                    row => "[" + (string)row["tbl_name"] + "]", cancellationToken);
+                    row => "[" + (string)row["tbl_name"] + "]", cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
@@ -131,7 +131,7 @@ namespace Database.Initialization
             {
                 var tableNames = await ExecuteSqlQueryAsync<string>(connectionString,
                        "SELECT '[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' as tbl_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
-                       row => "[" + (string)row["tbl_name"] + "]", cancellationToken);
+                       row => "[" + (string)row["tbl_name"] + "]", cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
@@ -145,13 +145,13 @@ namespace Database.Initialization
             }
             else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
-                bool exists = await DbInitializer.ExistsAsync(connectionString, cancellationToken);
+                bool exists = await DbInitializer.ExistsAsync(connectionString, cancellationToken).ConfigureAwait(false);
 
                 if (!exists)
                 {
                     using (var conn = new SqliteConnection(connectionString))
                     {
-                        await conn.OpenAsync(cancellationToken);
+                        await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                         return true;
                     }
                 }
@@ -180,7 +180,7 @@ namespace Database.Initialization
                                     BEGIN
                                         ALTER DATABASE [{dbName}] SET READ_COMMITTED_SNAPSHOT ON;
                                     END;
-                            END", cancellationToken);
+                            END", cancellationToken).ConfigureAwait(false);
 
                     var sqlConnection = new SqlConnection(connectionString);
                     SqlConnection.ClearPool(sqlConnection);
@@ -237,13 +237,13 @@ namespace Database.Initialization
                 var fileNames = await ExecuteSqlQueryAsync(masterConnectionString, @"
                 SELECT [physical_name] FROM [sys].[master_files]
                 WHERE [database_id] = DB_ID('" + dbName + "')",
-              row => (string)row["physical_name"], cancellationToken);
+              row => (string)row["physical_name"], cancellationToken).ConfigureAwait(false);
 
                 if (fileNames.Any())
                 {
                     await ExecuteSqlCommandAsync(masterConnectionString, $@"
                         ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                        DROP DATABASE [{dbName}];", cancellationToken);
+                        DROP DATABASE [{dbName}];", cancellationToken).ConfigureAwait(false);
 
                     //ExecuteSqlCommand(masterConnectiongString, $@"
                     //    ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
@@ -280,11 +280,11 @@ namespace Database.Initialization
             TType result = default(TType);
             using (var connection = new SqliteConnection(connectionString))
             {
-                await connection.OpenAsync(cancellationToken);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
-                    result = (TType)(await command.ExecuteScalarAsync(cancellationToken));
+                    result = (TType)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
                 }
             }
 
@@ -300,13 +300,13 @@ namespace Database.Initialization
             var result = new List<TType>();
             using (var connection = new SqliteConnection(connectionString))
             {
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
                     using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                     {
-                        while (await reader.ReadAsync(cancellationToken))
+                        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                         {
                             result.Add(read(reader));
                         }
@@ -325,11 +325,11 @@ namespace Database.Initialization
         {
             using (var connection = new SqlConnection(connectionString))
             {
-                await connection.OpenAsync(cancellationToken);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = commandText;
-                    await command.ExecuteNonQueryAsync(cancellationToken);
+                    await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
         }
@@ -342,7 +342,7 @@ namespace Database.Initialization
             TType result = default(TType);
             using (var connection = new SqlConnection(connectionString))
             {
-                await connection.OpenAsync(cancellationToken);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
@@ -362,13 +362,13 @@ namespace Database.Initialization
             var result = new List<TType>();
             using (var connection = new SqlConnection(connectionString))
             {
-                await connection.OpenAsync(cancellationToken);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
                     using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                     {
-                        while (await reader.ReadAsync(cancellationToken))
+                        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
                         {
                             result.Add(read(reader));
                         }

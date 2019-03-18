@@ -12,9 +12,9 @@
     <PackageTags>database initialization sqlserver sqlite</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>(c) David Ikin</Copyright>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
-    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
