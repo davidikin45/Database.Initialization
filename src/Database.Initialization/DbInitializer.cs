@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -24,6 +26,19 @@ namespace Database.Initialization
             }
         }
 
+        public static async Task<bool> ExistsAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await TestConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static async Task TestConnectionAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(connectionString))
@@ -37,16 +52,21 @@ namespace Database.Initialization
 
                 using (var conn = new SqliteConnection(builder.ConnectionString))
                 {
-                    await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    await TestConnectionAsync(conn).ConfigureAwait(false);
                 }
             }
             else
             {
                 using (var conn = new SqlConnection(connectionString))
                 {
-                    await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    await TestConnectionAsync(conn).ConfigureAwait(false);
                 }
             }
+        }
+
+        public static async Task TestConnectionAsync(DbConnection conn, CancellationToken cancellationToken = default)
+        {
+            await conn.OpenAsync(cancellationToken);
         }
 
         public static async Task<bool> HasTablesAsync(string connectionString)
@@ -65,17 +85,39 @@ namespace Database.Initialization
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
-                var count = await ExecuteSqliteScalarAsync<long>(builder.ConnectionString,
+                using (var conn = new SqliteConnection(builder.ConnectionString))
+                {
+                    return await TableCountAsync(conn, cancellationToken);
+                }
+            }
+            else
+            {
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    return await TableCountAsync(conn, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task<long> TableCountAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        {
+            if (connection is SqliteConnection)
+            {
+                var count = await ExecuteScalarAsync<long>(connection,
                     "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';", cancellationToken).ConfigureAwait(false);
 
                 return count;
             }
+            else if (connection is SqlConnection)
+            {
+                var count = await ExecuteScalarAsync<int>(connection,
+                   "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken).ConfigureAwait(false);
+
+                return Convert.ToInt64(count);
+            }
             else
             {
-                var count = await ExecuteSqlScalarAsync<int>(connectionString,
-                       "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken).ConfigureAwait(false);
-
-                return count;
+                throw new Exception("Unsupported Connection");
             }
         }
 
@@ -89,8 +131,27 @@ namespace Database.Initialization
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
-                var exists = await ExecuteSqliteScalarAsync<long>(builder.ConnectionString,
-                    $@"SELECT CASE WHEN EXISTS (
+                using (var conn = new SqliteConnection(builder.ConnectionString))
+                {
+                    return await TableExistsAsync(conn, tableName, cancellationToken);
+                }
+            }
+            else
+            {
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    return await TableExistsAsync(conn, tableName, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task<bool> TableExistsAsync(DbConnection connection, string tableName, CancellationToken cancellationToken = default)
+        {
+
+            if (connection is SqliteConnection)
+            {
+                var exists = await ExecuteScalarAsync<long>(connection,
+                $@"SELECT CASE WHEN EXISTS (
                             SELECT * FROM ""sqlite_master"" WHERE ""type"" = 'table' AND ""rootpage"" IS NOT NULL AND ""tbl_name"" = '{tableName}'
                         )
                         THEN CAST(1 AS BIT)
@@ -98,10 +159,10 @@ namespace Database.Initialization
 
                 return exists == 1;
             }
-            else
+            else if (connection is SqlConnection)
             {
-                var exists = await ExecuteSqlScalarAsync<bool>(connectionString,
-                       $@"SELECT CASE WHEN EXISTS (
+                var exists = await ExecuteScalarAsync<bool>(connection,
+                    $@"SELECT CASE WHEN EXISTS (
                             SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{tableName}'
                         )
                         THEN CAST(1 AS BIT)
@@ -109,31 +170,57 @@ namespace Database.Initialization
 
                 return exists;
             }
+            else
+            {
+                throw new Exception("Unsupported Connection");
+            }
         }
 
-        public static async Task<List<(string Schema, string TableName, string SchemaAndTableName)>> TablesAsync(string connectionString, CancellationToken cancellationToken = default)
+        public static async Task<List<(string Schema, string TableName)>> TablesAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
-                return new List<(string Schema, string TableName, string SchemaAndTableName)>();
+                return new List<(string Schema, string TableName)>();
             }
             else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
-                var tableNames = await ExecuteSqliteQueryAsync<(string Schema, string TableName, string SchemaAndTableName)>(builder.ConnectionString,
+                using (var conn = new SqliteConnection(builder.ConnectionString))
+                {
+                    return await TablesAsync(conn, cancellationToken);
+                }
+            }
+            else
+            {
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    return await TablesAsync(conn, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task<List<(string Schema, string TableName)>> TablesAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        {
+            if (connection is SqliteConnection)
+            {
+                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(connection,
                     "SELECT * FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';",
-                    row => (((string)row["tbl_name"]).Split('.').Count() > 1 ? ((string)row["tbl_name"]).Split('.')[0] : "", ((string)row["tbl_name"]).Split('.').Count() > 1 ? ((string)row["tbl_name"]).Split('.')[1] : ((string)row["tbl_name"]).Split('.')[0], (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
+                    row => ("", (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
+
+                return tableNames;
+            }
+            else if (connection is SqlConnection)
+            {
+                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(connection,
+                       "SELECT TABLE_SCHEMA + '.' + TABLE_NAME as tbl_name, TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
+                       row => ((string)row["TABLE_SCHEMA"], (string)row["TABLE_NAME"]), cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
             else
             {
-                var tableNames = await ExecuteSqlQueryAsync<(string Schema, string TableName, string SchemaAndTableName)>(connectionString,
-                       "SELECT TABLE_SCHEMA + '.' + TABLE_NAME as tbl_name, TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
-                       row => ((string)row["TABLE_SCHEMA"], (string)row["TABLE_NAME"], (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
-
-                return tableNames;
+                throw new Exception("Unsupported Connection");
             }
         }
 
@@ -145,11 +232,38 @@ namespace Database.Initialization
             }
             else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
-                bool exists = await DbInitializer.ExistsAsync(connectionString, cancellationToken).ConfigureAwait(false);
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    return await EnsureCreatedAsync(conn, cancellationToken);
+                }
+            }
+            else
+            {
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    return await EnsureCreatedAsync(conn, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task<bool> EnsureCreatedAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        {
+            if (connection is SqliteConnection)
+            {
+                bool exists = false;
+
+                if (connection.ConnectionString.Contains(":memory"))
+                {
+                    exists = await DbInitializer.ExistsAsync(connection, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    exists = await DbInitializer.ExistsAsync(connection.ConnectionString, cancellationToken).ConfigureAwait(false);
+                }
 
                 if (!exists)
                 {
-                    using (var conn = new SqliteConnection(connectionString))
+                    using (var conn = new SqliteConnection(connection.ConnectionString))
                     {
                         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                         return true;
@@ -160,19 +274,21 @@ namespace Database.Initialization
                     return false;
                 }
             }
-            else
+            else if (connection is SqlConnection)
             {
-                bool exists = await DbInitializer.ExistsAsync(connectionString, cancellationToken);
+                bool exists = await DbInitializer.ExistsAsync(connection.ConnectionString, cancellationToken);
 
                 if (!exists)
                 {
-                    var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connectionString);
+                    var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connection.ConnectionString);
                     var dbName = masterConnectiongStringBuilder.InitialCatalog;
 
                     masterConnectiongStringBuilder.InitialCatalog = "master";
                     masterConnectiongStringBuilder.AttachDBFilename = "";
 
-                    await ExecuteSqlCommandAsync(masterConnectiongStringBuilder.ConnectionString, $@"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'{dbName}') 
+                    using (var masterConnection = new SqlConnection(masterConnectiongStringBuilder.ConnectionString))
+                    {
+                        await ExecuteCommandAsync(masterConnection, $@"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'{dbName}') 
                             BEGIN
                                     CREATE DATABASE [{dbName}];
 
@@ -181,8 +297,9 @@ namespace Database.Initialization
                                         ALTER DATABASE [{dbName}] SET READ_COMMITTED_SNAPSHOT ON;
                                     END;
                             END", cancellationToken).ConfigureAwait(false);
+                    }
 
-                    var sqlConnection = new SqlConnection(connectionString);
+                    var sqlConnection = new SqlConnection(connection.ConnectionString);
                     SqlConnection.ClearPool(sqlConnection);
 
                     return true;
@@ -192,17 +309,39 @@ namespace Database.Initialization
                     return false;
                 }
             }
+            else
+            {
+                throw new Exception("Unsupported Connection");
+            }
         }
 
         public static async Task<bool> EnsureDestroyedAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
-
+                return false;
             }
             else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
-                var builder = new SqliteConnectionStringBuilder(connectionString);
+                using (var conn = new SqliteConnection(connectionString))
+                {
+                    return await EnsureDestroyedAsync(conn, cancellationToken);
+                }
+            }
+            else
+            {
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    return await EnsureDestroyedAsync(conn, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task<bool> EnsureDestroyedAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        {
+            if (connection is SqliteConnection)
+            {
+                var builder = new SqliteConnectionStringBuilder(connection.ConnectionString);
 
                 if (!string.IsNullOrEmpty(builder.DataSource))
                 {
@@ -213,9 +352,9 @@ namespace Database.Initialization
                     }
                 }
             }
-            else
+            else if (connection is SqlConnection)
             {
-                var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connectionString);
+                var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connection.ConnectionString);
                 var dbName = masterConnectiongStringBuilder.InitialCatalog;
                 masterConnectiongStringBuilder.InitialCatalog = "master";
 
@@ -235,140 +374,135 @@ namespace Database.Initialization
 
                 var masterConnectionString = masterConnectiongStringBuilder.ConnectionString;
 
-                var fileNames = await ExecuteSqlQueryAsync(masterConnectionString, @"
+                using (var masterConnection = new SqlConnection(masterConnectionString))
+                {
+
+                    var fileNames = await ExecuteQueryAsync(masterConnection, @"
                 SELECT [physical_name] FROM [sys].[master_files]
                 WHERE [database_id] = DB_ID('" + dbName + "')",
-              row => (string)row["physical_name"], cancellationToken).ConfigureAwait(false);
+                  row => (string)row["physical_name"], cancellationToken).ConfigureAwait(false);
 
-                if (fileNames.Any())
-                {
-                    await ExecuteSqlCommandAsync(masterConnectionString, $@"
+                    if (fileNames.Any())
+                    {
+                        await ExecuteCommandAsync(masterConnection, $@"
                         ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
                         DROP DATABASE [{dbName}];", cancellationToken).ConfigureAwait(false);
 
-                    //ExecuteSqlCommand(masterConnectiongString, $@"
-                    //    ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-                    //    EXEC sp_detach_db '{dbName}'");
-                    ////To remove a database from the current server without deleting the files from the file system, use sp_detach_db.
+                        //ExecuteSqlCommand(masterConnectiongString, $@"
+                        //    ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                        //    EXEC sp_detach_db '{dbName}'");
+                        ////To remove a database from the current server without deleting the files from the file system, use sp_detach_db.
 
-                    foreach (var file in fileNames)
-                    {
-                        if (File.Exists(file))
+                        foreach (var file in fileNames)
                         {
-                            File.Delete(file);
+                            if (File.Exists(file))
+                            {
+                                File.Delete(file);
+                            }
                         }
+                        return true;
                     }
-                    return true;
-                }
 
-                if (!string.IsNullOrEmpty(mdfFileName) && File.Exists(mdfFileName))
-                {
-                    File.Delete(mdfFileName);
-                    return true;
-                }
+                    if (!string.IsNullOrEmpty(mdfFileName) && File.Exists(mdfFileName))
+                    {
+                        File.Delete(mdfFileName);
+                        return true;
+                    }
 
-                if (!string.IsNullOrEmpty(logFileName) && File.Exists(logFileName))
-                {
-                    File.Delete(logFileName);
-                    return true;
+                    if (!string.IsNullOrEmpty(logFileName) && File.Exists(logFileName))
+                    {
+                        File.Delete(logFileName);
+                        return true;
+                    }
                 }
             }
-
+            else
+            {
+                throw new Exception("Unsupported Connection");
+            }
             return false;
         }
 
-        #region SQLite Helper Methods
-        private static async Task<TType> ExecuteSqliteScalarAsync<TType>(
-        string connectionString,
-        string queryText,
-        CancellationToken cancellationToken = default)
-        {
-            TType result = default(TType);
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = queryText;
-                    result = (TType)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
-                }
-            }
-
-            return result;
-        }
-
-        private static async Task<List<TType>> ExecuteSqliteQueryAsync<TType>(
-            string connectionString,
-            string queryText,
-            Func<SqliteDataReader, TType> read,
-            CancellationToken cancellationToken = default)
-        {
-            var result = new List<TType>();
-            using (var connection = new SqliteConnection(connectionString))
-            {
-                await connection.OpenAsync().ConfigureAwait(false);
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = queryText;
-                    using (var reader = await command.ExecuteReaderAsync(cancellationToken))
-                    {
-                        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-                        {
-                            result.Add(read(reader));
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        #endregion
-
-        #region SQL Server Helper Methods
-        private static async Task ExecuteSqlCommandAsync(
-        string connectionString,
+        #region Existing Connection Helper Methods
+        private static async Task ExecuteCommandAsync(
+        DbConnection connection,
         string commandText,
         CancellationToken cancellationToken = default)
         {
-            using (var connection = new SqlConnection(connectionString))
+            var opened = false;
+            if (connection.State != ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                opened = true;
+            }
+
+            try
+            {
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = commandText;
                     await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
+            finally
+            {
+                if (opened && connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
         }
 
-        private static async Task<TType> ExecuteSqlScalarAsync<TType>(
-       string connectionString,
+        private static async Task<TType> ExecuteScalarAsync<TType>(
+       DbConnection connection,
        string queryText,
        CancellationToken cancellationToken = default)
         {
             TType result = default(TType);
-            using (var connection = new SqlConnection(connectionString))
+
+            var opened = false;
+            if (connection.State != ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                opened = true;
+            }
+
+            try
+            {
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
                     result = (TType)(await command.ExecuteScalarAsync(cancellationToken));
                 }
             }
+            finally
+            {
+                if (opened && connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
 
             return result;
         }
 
-        private static async Task<List<TType>> ExecuteSqlQueryAsync<TType>(
-            string connectionString,
-            string queryText,
-            Func<SqlDataReader, TType> read,
-           CancellationToken cancellationToken = default)
+        private static async Task<List<TType>> ExecuteQueryAsync<TType>(
+        DbConnection connection,
+        string queryText,
+        Func<DbDataReader, TType> read,
+       CancellationToken cancellationToken = default)
         {
             var result = new List<TType>();
-            using (var connection = new SqlConnection(connectionString))
+
+            var opened = false;
+            if (connection.State != ConnectionState.Open)
             {
                 await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                opened = true;
+            }
+
+            try
+            {
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = queryText;
@@ -381,6 +515,14 @@ namespace Database.Initialization
                     }
                 }
             }
+            finally
+            {
+                if (opened && connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
             return result;
         }
         #endregion
