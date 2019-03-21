@@ -194,7 +194,7 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task EnsureDestroyedAsync(string connectionString, CancellationToken cancellationToken = default)
+        public static async Task<bool> EnsureDestroyedAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -209,6 +209,7 @@ namespace Database.Initialization
                     if (File.Exists(builder.DataSource))
                     {
                         File.Delete(builder.DataSource);
+                        return true;
                     }
                 }
             }
@@ -257,18 +258,23 @@ namespace Database.Initialization
                             File.Delete(file);
                         }
                     }
+                    return true;
                 }
 
                 if (!string.IsNullOrEmpty(mdfFileName) && File.Exists(mdfFileName))
                 {
                     File.Delete(mdfFileName);
+                    return true;
                 }
 
                 if (!string.IsNullOrEmpty(logFileName) && File.Exists(logFileName))
                 {
                     File.Delete(logFileName);
+                    return true;
                 }
             }
+
+            return false;
         }
 
         #region SQLite Helper Methods
