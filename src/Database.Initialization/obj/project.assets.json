@@ -975,7 +975,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "restore": {
       "projectUniqueName": "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj",
       "projectName": "Database.Initialization",

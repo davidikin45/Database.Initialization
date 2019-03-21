@@ -111,27 +111,27 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<List<string>> TableNamesAsync(string connectionString, CancellationToken cancellationToken = default)
+        public static async Task<List<(string Schema, string TableName, string SchemaAndTableName)>> TablesAsync(string connectionString, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
-                return new List<string>();
+                return new List<(string Schema, string TableName, string SchemaAndTableName)>();
             }
             else if (ConnectionStringHelper.IsSQLite(connectionString))
             {
                 var builder = new SqliteConnectionStringBuilder(connectionString);
                 builder.Mode = SqliteOpenMode.ReadOnly;
-                var tableNames = await ExecuteSqliteQueryAsync<string>(builder.ConnectionString,
+                var tableNames = await ExecuteSqliteQueryAsync<(string Schema, string TableName, string SchemaAndTableName)>(builder.ConnectionString,
                     "SELECT * FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';",
-                    row => "[" + (string)row["tbl_name"] + "]", cancellationToken).ConfigureAwait(false);
+                    row => (((string)row["tbl_name"]).Split('.').Count() > 1 ? ((string)row["tbl_name"]).Split('.')[0] : "", ((string)row["tbl_name"]).Split('.').Count() > 1 ? ((string)row["tbl_name"]).Split('.')[1] : ((string)row["tbl_name"]).Split('.')[0], (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
             else
             {
-                var tableNames = await ExecuteSqlQueryAsync<string>(connectionString,
-                       "SELECT '[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' as tbl_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
-                       row => "[" + (string)row["tbl_name"] + "]", cancellationToken).ConfigureAwait(false);
+                var tableNames = await ExecuteSqlQueryAsync<(string Schema, string TableName, string SchemaAndTableName)>(connectionString,
+                       "SELECT TABLE_SCHEMA + '.' + TABLE_NAME as tbl_name, TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
+                       row => ((string)row["TABLE_SCHEMA"], (string)row["TABLE_NAME"], (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
