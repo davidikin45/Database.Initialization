@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj": {
-      "version": "1.0.3",
+      "version": "1.0.4",
       "restore": {
         "projectUniqueName": "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj",
         "projectName": "Database.Initialization",
