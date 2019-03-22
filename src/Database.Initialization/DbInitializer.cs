@@ -26,11 +26,11 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<bool> ExistsAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        public static async Task<bool> ExistsAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
             try
             {
-                await TestConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
+                await TestConnectionAsync(existingConnection, cancellationToken).ConfigureAwait(false);
                 return true;
             }
             catch
@@ -64,9 +64,9 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task TestConnectionAsync(DbConnection conn, CancellationToken cancellationToken = default)
+        public static async Task TestConnectionAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            await conn.OpenAsync(cancellationToken);
+            await existingConnection.OpenAsync(cancellationToken);
         }
 
         public static async Task<bool> HasTablesAsync(string connectionString)
@@ -99,18 +99,18 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<long> TableCountAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        public static async Task<long> TableCountAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            if (connection is SqliteConnection)
+            if (existingConnection is SqliteConnection)
             {
-                var count = await ExecuteScalarAsync<long>(connection,
+                var count = await ExecuteScalarAsync<long>(existingConnection,
                     "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';", cancellationToken).ConfigureAwait(false);
 
                 return count;
             }
-            else if (connection is SqlConnection)
+            else if (existingConnection is SqlConnection)
             {
-                var count = await ExecuteScalarAsync<int>(connection,
+                var count = await ExecuteScalarAsync<int>(existingConnection,
                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken).ConfigureAwait(false);
 
                 return Convert.ToInt64(count);
@@ -145,12 +145,12 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<bool> TableExistsAsync(DbConnection connection, string tableName, CancellationToken cancellationToken = default)
+        public static async Task<bool> TableExistsAsync(DbConnection existingConnection, string tableName, CancellationToken cancellationToken = default)
         {
 
-            if (connection is SqliteConnection)
+            if (existingConnection is SqliteConnection)
             {
-                var exists = await ExecuteScalarAsync<long>(connection,
+                var exists = await ExecuteScalarAsync<long>(existingConnection,
                 $@"SELECT CASE WHEN EXISTS (
                             SELECT * FROM ""sqlite_master"" WHERE ""type"" = 'table' AND ""rootpage"" IS NOT NULL AND ""tbl_name"" = '{tableName}'
                         )
@@ -159,9 +159,9 @@ namespace Database.Initialization
 
                 return exists == 1;
             }
-            else if (connection is SqlConnection)
+            else if (existingConnection is SqlConnection)
             {
-                var exists = await ExecuteScalarAsync<bool>(connection,
+                var exists = await ExecuteScalarAsync<bool>(existingConnection,
                     $@"SELECT CASE WHEN EXISTS (
                             SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_NAME = '{tableName}'
                         )
@@ -200,19 +200,19 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<List<(string Schema, string TableName)>> TablesAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        public static async Task<List<(string Schema, string TableName)>> TablesAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            if (connection is SqliteConnection)
+            if (existingConnection is SqliteConnection)
             {
-                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(connection,
+                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(existingConnection,
                     "SELECT * FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL AND \"name\" != 'sqlite_sequence';",
                     row => ("", (string)row["tbl_name"]), cancellationToken).ConfigureAwait(false);
 
                 return tableNames;
             }
-            else if (connection is SqlConnection)
+            else if (existingConnection is SqlConnection)
             {
-                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(connection,
+                var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(existingConnection,
                        "SELECT TABLE_SCHEMA + '.' + TABLE_NAME as tbl_name, TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
                        row => ((string)row["TABLE_SCHEMA"], (string)row["TABLE_NAME"]), cancellationToken).ConfigureAwait(false);
 
@@ -246,24 +246,24 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<bool> EnsureCreatedAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        public static async Task<bool> EnsureCreatedAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            if (connection is SqliteConnection)
+            if (existingConnection is SqliteConnection)
             {
                 bool exists = false;
 
-                if (connection.ConnectionString.Contains(":memory"))
+                if (existingConnection.ConnectionString.Contains(":memory"))
                 {
-                    exists = await DbInitializer.ExistsAsync(connection, cancellationToken).ConfigureAwait(false);
+                    exists = await DbInitializer.ExistsAsync(existingConnection, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    exists = await DbInitializer.ExistsAsync(connection.ConnectionString, cancellationToken).ConfigureAwait(false);
+                    exists = await DbInitializer.ExistsAsync(existingConnection.ConnectionString, cancellationToken).ConfigureAwait(false);
                 }
 
                 if (!exists)
                 {
-                    using (var conn = new SqliteConnection(connection.ConnectionString))
+                    using (var conn = new SqliteConnection(existingConnection.ConnectionString))
                     {
                         await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
                         return true;
@@ -274,13 +274,13 @@ namespace Database.Initialization
                     return false;
                 }
             }
-            else if (connection is SqlConnection)
+            else if (existingConnection is SqlConnection)
             {
-                bool exists = await DbInitializer.ExistsAsync(connection.ConnectionString, cancellationToken);
+                bool exists = await DbInitializer.ExistsAsync(existingConnection.ConnectionString, cancellationToken);
 
                 if (!exists)
                 {
-                    var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connection.ConnectionString);
+                    var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(existingConnection.ConnectionString);
                     var dbName = masterConnectiongStringBuilder.InitialCatalog;
 
                     masterConnectiongStringBuilder.InitialCatalog = "master";
@@ -299,7 +299,7 @@ namespace Database.Initialization
                             END", cancellationToken).ConfigureAwait(false);
                     }
 
-                    var sqlConnection = new SqlConnection(connection.ConnectionString);
+                    var sqlConnection = new SqlConnection(existingConnection.ConnectionString);
                     SqlConnection.ClearPool(sqlConnection);
 
                     return true;
@@ -337,11 +337,11 @@ namespace Database.Initialization
             }
         }
 
-        public static async Task<bool> EnsureDestroyedAsync(DbConnection connection, CancellationToken cancellationToken = default)
+        public static async Task<bool> EnsureDestroyedAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            if (connection is SqliteConnection)
+            if (existingConnection is SqliteConnection)
             {
-                var builder = new SqliteConnectionStringBuilder(connection.ConnectionString);
+                var builder = new SqliteConnectionStringBuilder(existingConnection.ConnectionString);
 
                 if (!string.IsNullOrEmpty(builder.DataSource))
                 {
@@ -352,9 +352,9 @@ namespace Database.Initialization
                     }
                 }
             }
-            else if (connection is SqlConnection)
+            else if (existingConnection is SqlConnection)
             {
-                var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(connection.ConnectionString);
+                var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(existingConnection.ConnectionString);
                 var dbName = masterConnectiongStringBuilder.InitialCatalog;
                 masterConnectiongStringBuilder.InitialCatalog = "master";
 
