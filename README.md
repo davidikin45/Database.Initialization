@@ -1,4 +1,7 @@
-# SQL Server and SQLite Initialization
+# SQL Server, SQLite and SQLite InMemory Initialization
+
+* I have created the package which aims to allow DataStorage to be initialized & destroyed in a similar manner to how EF Core initialization works.
+* Supports SQL Server, SQLite and SQLite InMemory.
 
 ## See Also
 * [Hangfire Initialization](https://github.com/davidikin45/Hangfire.Initialization)
