@@ -2,10 +2,10 @@
   "version": 3,
   "targets": {
     ".NETStandard,Version=v2.0": {
-      "Microsoft.Data.Sqlite/2.2.3": {
+      "Microsoft.Data.Sqlite/2.2.4": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Data.Sqlite.Core": "2.2.3",
+          "Microsoft.Data.Sqlite.Core": "2.2.4",
           "SQLitePCLRaw.bundle_green": "1.1.12"
         },
         "compile": {
@@ -15,7 +15,7 @@
           "lib/netstandard2.0/_._": {}
         }
       },
-      "Microsoft.Data.Sqlite.Core/2.2.3": {
+      "Microsoft.Data.Sqlite.Core/2.2.4": {
         "type": "package",
         "dependencies": {
           "SQLitePCLRaw.core": "1.1.12"
@@ -147,7 +147,7 @@
           "lib/netstandard2.0/System.Buffers.dll": {}
         }
       },
-      "System.Data.SqlClient/4.6.0": {
+      "System.Data.SqlClient/4.6.1": {
         "type": "package",
         "dependencies": {
           "Microsoft.Win32.Registry": "4.5.0",
@@ -270,28 +270,28 @@
     }
   },
   "libraries": {
-    "Microsoft.Data.Sqlite/2.2.3": {
-      "sha512": "qx0gY40Am6OyEkX2Fem6cR8QP7faGGmPq6fZ8zrLWOgIO/GCIPqevTO4J5befU8slW3uVHrxdI8FDj7yMNx7eg==",
+    "Microsoft.Data.Sqlite/2.2.4": {
+      "sha512": "QgYDdW07QZUyZPwisIU3Db62FnK6Yfcuru7KAsHusLGstJ0kBIXFnG185PcWmm2ba4AN0ab1iwrhXZr/9Yxj0w==",
       "type": "package",
-      "path": "microsoft.data.sqlite/2.2.3",
+      "path": "microsoft.data.sqlite/2.2.4",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "lib/netstandard2.0/_._",
-        "microsoft.data.sqlite.2.2.3.nupkg.sha512",
+        "microsoft.data.sqlite.2.2.4.nupkg.sha512",
         "microsoft.data.sqlite.nuspec"
       ]
     },
-    "Microsoft.Data.Sqlite.Core/2.2.3": {
-      "sha512": "WVhNky8hr/k6+PfwOz5yJzNe4CPCkyOnYI4nAwfY2qm54/thGGXLwgga+i07lvLryThCOJ4JaQfJg1iZLzlP5Q==",
+    "Microsoft.Data.Sqlite.Core/2.2.4": {
+      "sha512": "69DJj8bUJpXPfWpmJ/Sh165GWjLjlL516l0GnJDImabfR+leXb61HaQF97THWvyx5yY7MvpO94QW5nyiXMVOAA==",
       "type": "package",
-      "path": "microsoft.data.sqlite.core/2.2.3",
+      "path": "microsoft.data.sqlite.core/2.2.4",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "lib/netstandard2.0/Microsoft.Data.Sqlite.dll",
         "lib/netstandard2.0/Microsoft.Data.Sqlite.xml",
-        "microsoft.data.sqlite.core.2.2.3.nupkg.sha512",
+        "microsoft.data.sqlite.core.2.2.4.nupkg.sha512",
         "microsoft.data.sqlite.core.nuspec"
       ]
     },
@@ -635,10 +635,10 @@
         "version.txt"
       ]
     },
-    "System.Data.SqlClient/4.6.0": {
-      "sha512": "gwItUWW1BMCckicFO85c8frFaMK8SGqYn5IeA3GSX4Lmid+CjXETfoHz7Uv+Vx6L0No7iRc/7cBL8gd6o9k9/g==",
+    "System.Data.SqlClient/4.6.1": {
+      "sha512": "7MTJhBFt4/tSJ2VRpG+TQNPcDdbCnWuoYzbe0kD5O3mQ7aZ2Q+Q3D9Y5Y3/aper5Gp3Lrs+8edk9clvxyPYXPw==",
       "type": "package",
-      "path": "system.data.sqlclient/4.6.0",
+      "path": "system.data.sqlclient/4.6.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -703,7 +703,7 @@
         "runtimes/win/lib/netstandard1.3/System.Data.SqlClient.dll",
         "runtimes/win/lib/netstandard2.0/System.Data.SqlClient.dll",
         "runtimes/win/lib/uap10.0.16299/System.Data.SqlClient.dll",
-        "system.data.sqlclient.4.6.0.nupkg.sha512",
+        "system.data.sqlclient.4.6.1.nupkg.sha512",
         "system.data.sqlclient.nuspec",
         "useSharedDesignerContext.txt",
         "version.txt"
@@ -965,9 +965,9 @@
   },
   "projectFileDependencyGroups": {
     ".NETStandard,Version=v2.0": [
-      "Microsoft.Data.Sqlite >= 2.2.3",
+      "Microsoft.Data.Sqlite >= 2.2.4",
       "NETStandard.Library >= 2.0.3",
-      "System.Data.SqlClient >= 4.6.0"
+      "System.Data.SqlClient >= 4.6.1"
     ]
   },
   "packageFolders": {
@@ -975,7 +975,7 @@
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder": {}
   },
   "project": {
-    "version": "1.0.13",
+    "version": "1.0.14",
     "restore": {
       "projectUniqueName": "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj",
       "projectName": "Database.Initialization",
@@ -1019,7 +1019,7 @@
         "dependencies": {
           "Microsoft.Data.Sqlite": {
             "target": "Package",
-            "version": "[2.2.3, )"
+            "version": "[2.2.4, )"
           },
           "NETStandard.Library": {
             "suppressParent": "All",
@@ -1029,7 +1029,7 @@
           },
           "System.Data.SqlClient": {
             "target": "Package",
-            "version": "[4.6.0, )"
+            "version": "[4.6.1, )"
           }
         },
         "imports": [

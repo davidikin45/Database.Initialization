@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj": {
-      "version": "1.0.13",
+      "version": "1.0.14",
       "restore": {
         "projectUniqueName": "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj",
         "projectName": "Database.Initialization",
@@ -49,7 +49,7 @@
           "dependencies": {
             "Microsoft.Data.Sqlite": {
               "target": "Package",
-              "version": "[2.2.3, )"
+              "version": "[2.2.4, )"
             },
             "NETStandard.Library": {
               "suppressParent": "All",
@@ -59,7 +59,7 @@
             },
             "System.Data.SqlClient": {
               "target": "Package",
-              "version": "[4.6.0, )"
+              "version": "[4.6.1, )"
             }
           },
           "imports": [
