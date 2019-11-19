@@ -25,5 +25,10 @@
         {
             return string.IsNullOrEmpty(connectionString) || connectionString.ToLower().Contains(":memory:");
         }
+
+        public static bool IsCosmos(string connectionString)
+        {
+            return connectionString.ToLower().Contains("http");
+        }
     }
 }
