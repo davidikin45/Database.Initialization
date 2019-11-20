@@ -57,16 +57,16 @@ namespace Database.Initialization
             }
             else
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
                 {
                     await TestConnectionAsync(conn).ConfigureAwait(false);
                 }
             }
         }
 
-        public static async Task TestConnectionAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
+        public static Task TestConnectionAsync(DbConnection existingConnection, CancellationToken cancellationToken = default)
         {
-            await existingConnection.OpenAsync(cancellationToken);
+            return existingConnection.OpenAsync(cancellationToken);
         }
 
         public static async Task<bool> HasTablesAsync(string connectionString)
@@ -92,7 +92,7 @@ namespace Database.Initialization
             }
             else
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
                 {
                     return await TableCountAsync(conn, cancellationToken);
                 }
@@ -108,7 +108,7 @@ namespace Database.Initialization
 
                 return count;
             }
-            else if (existingConnection is SqlConnection)
+            else if (existingConnection is System.Data.SqlClient.SqlConnection || existingConnection is Microsoft.Data.SqlClient.SqlConnection)
             {
                 var count = await ExecuteScalarAsync<int>(existingConnection,
                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'", cancellationToken).ConfigureAwait(false);
@@ -159,7 +159,7 @@ namespace Database.Initialization
 
                 return exists == 1;
             }
-            else if (existingConnection is SqlConnection)
+            else if (existingConnection is System.Data.SqlClient.SqlConnection || existingConnection is Microsoft.Data.SqlClient.SqlConnection)
             {
                 var exists = await ExecuteScalarAsync<bool>(existingConnection,
                     $@"SELECT CASE WHEN EXISTS (
@@ -193,7 +193,7 @@ namespace Database.Initialization
             }
             else
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
                 {
                     return await TablesAsync(conn, cancellationToken);
                 }
@@ -210,7 +210,7 @@ namespace Database.Initialization
 
                 return tableNames;
             }
-            else if (existingConnection is SqlConnection)
+            else if (existingConnection is System.Data.SqlClient.SqlConnection || existingConnection is Microsoft.Data.SqlClient.SqlConnection)
             {
                 var tableNames = await ExecuteQueryAsync<(string Schema, string TableName)>(existingConnection,
                        "SELECT TABLE_SCHEMA + '.' + TABLE_NAME as tbl_name, TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_SCHEMA, TABLE_NAME",
@@ -239,7 +239,7 @@ namespace Database.Initialization
             }
             else
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
                 {
                     return await EnsureCreatedAsync(conn, cancellationToken);
                 }
@@ -274,19 +274,19 @@ namespace Database.Initialization
                     return false;
                 }
             }
-            else if (existingConnection is SqlConnection)
+            else if (existingConnection is System.Data.SqlClient.SqlConnection || existingConnection is Microsoft.Data.SqlClient.SqlConnection)
             {
                 bool exists = await DbInitializer.ExistsAsync(existingConnection.ConnectionString, cancellationToken);
 
                 if (!exists)
                 {
-                    var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(existingConnection.ConnectionString);
+                    var masterConnectiongStringBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(existingConnection.ConnectionString);
                     var dbName = masterConnectiongStringBuilder.InitialCatalog;
 
                     masterConnectiongStringBuilder.InitialCatalog = "master";
                     masterConnectiongStringBuilder.AttachDBFilename = "";
 
-                    using (var masterConnection = new SqlConnection(masterConnectiongStringBuilder.ConnectionString))
+                    using (var masterConnection = new Microsoft.Data.SqlClient.SqlConnection(masterConnectiongStringBuilder.ConnectionString))
                     {
                         await ExecuteCommandAsync(masterConnection, $@"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'{dbName}') 
                             BEGIN
@@ -299,8 +299,8 @@ namespace Database.Initialization
                             END", cancellationToken).ConfigureAwait(false);
                     }
 
-                    var sqlConnection = new SqlConnection(existingConnection.ConnectionString);
-                    SqlConnection.ClearPool(sqlConnection);
+                    var sqlConnection = new Microsoft.Data.SqlClient.SqlConnection(existingConnection.ConnectionString);
+                    Microsoft.Data.SqlClient.SqlConnection.ClearPool(sqlConnection);
 
                     return true;
                 }
@@ -330,7 +330,7 @@ namespace Database.Initialization
             }
             else
             {
-                using (var conn = new SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
                 {
                     return await EnsureDestroyedAsync(conn, cancellationToken);
                 }
@@ -352,7 +352,7 @@ namespace Database.Initialization
                     }
                 }
             }
-            else if (existingConnection is SqlConnection)
+            else if (existingConnection is System.Data.SqlClient.SqlConnection || existingConnection is Microsoft.Data.SqlClient.SqlConnection)
             {
                 var masterConnectiongStringBuilder = new SqlConnectionStringBuilder(existingConnection.ConnectionString);
                 var dbName = masterConnectiongStringBuilder.InitialCatalog;
@@ -374,7 +374,7 @@ namespace Database.Initialization
 
                 var masterConnectionString = masterConnectiongStringBuilder.ConnectionString;
 
-                using (var masterConnection = new SqlConnection(masterConnectionString))
+                using (var masterConnection = new Microsoft.Data.SqlClient.SqlConnection(masterConnectionString))
                 {
 
                     var fileNames = await ExecuteQueryAsync(masterConnection, @"

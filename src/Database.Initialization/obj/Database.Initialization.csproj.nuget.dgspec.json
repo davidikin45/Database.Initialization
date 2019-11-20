@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj": {
-      "version": "1.0.18",
+      "version": "1.0.19",
       "restore": {
         "projectUniqueName": "C:\\Development\\Database.Initialization\\src\\Database.Initialization\\Database.Initialization.csproj",
         "projectName": "Database.Initialization",
@@ -41,6 +41,10 @@
       "frameworks": {
         "netstandard2.0": {
           "dependencies": {
+            "Microsoft.Data.SqlClient": {
+              "target": "Package",
+              "version": "[1.0.19269.1, )"
+            },
             "Microsoft.Data.Sqlite": {
               "target": "Package",
               "version": "[3.0.1, )"
