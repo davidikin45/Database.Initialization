@@ -297,15 +297,27 @@ namespace Database.Initialization
                                         ALTER DATABASE [{dbName}] SET READ_COMMITTED_SNAPSHOT ON;
                                     END;
                             END", cancellationToken).ConfigureAwait(false);
+
+                        ClearPool(existingConnection);
                     }
 
-                    var sqlConnection = new Microsoft.Data.SqlClient.SqlConnection(existingConnection.ConnectionString);
-                    Microsoft.Data.SqlClient.SqlConnection.ClearPool(sqlConnection);
-                    var systemSqlConnection = new System.Data.SqlClient.SqlConnection(existingConnection.ConnectionString);
-                    System.Data.SqlClient.SqlConnection.ClearPool(systemSqlConnection);
-                    await Task.Delay(5000);
+                    //https://github.com/dotnet/efcore/blob/bde2b140d6f4cf94d6d1285d402941e20193ec60/src/EFCore.SqlServer/Storage/Internal/SqlServerDatabaseCreator.cs
+                    var retryOnNotExists = true;
+                    var giveUp = DateTime.UtcNow + TimeSpan.FromMinutes(1);
+                    var retryDelay = TimeSpan.FromMilliseconds(500);
 
-                    return true;
+                    while(true)
+                    {
+                        exists = await ExistsAsync(existingConnection, cancellationToken);
+                        if (exists)
+                            return true;
+                        if (!retryOnNotExists)
+                            return false;
+                        else if (DateTime.UtcNow > giveUp)
+                            throw new Exception($"Failed to create database: {dbName}");
+
+                        await Task.Delay(retryDelay, cancellationToken);
+                    }
                 }
                 else
                 {
@@ -315,6 +327,19 @@ namespace Database.Initialization
             else
             {
                 throw new Exception("Unsupported Connection");
+            }
+        }
+
+        // Clear connection pool for the database connection since after the 'create database' call, a previously
+        // invalid connection may now be valid.
+        private static void ClearPool(DbConnection existingConnection) { 
+            if(existingConnection is Microsoft.Data.SqlClient.SqlConnection sqlConnection)
+            {
+                Microsoft.Data.SqlClient.SqlConnection.ClearPool(sqlConnection);
+            }
+            else if (existingConnection is System.Data.SqlClient.SqlConnection systemSqlConnection)
+            {
+                System.Data.SqlClient.SqlConnection.ClearPool(systemSqlConnection);
             }
         }
 
