@@ -301,6 +301,9 @@ namespace Database.Initialization
 
                     var sqlConnection = new Microsoft.Data.SqlClient.SqlConnection(existingConnection.ConnectionString);
                     Microsoft.Data.SqlClient.SqlConnection.ClearPool(sqlConnection);
+                    var systemSqlConnection = new System.Data.SqlClient.SqlConnection(existingConnection.ConnectionString);
+                    System.Data.SqlClient.SqlConnection.ClearPool(systemSqlConnection);
+                    await Task.Delay(5000);
 
                     return true;
                 }
